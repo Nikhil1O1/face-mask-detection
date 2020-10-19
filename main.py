@@ -55,4 +55,64 @@ for imgPath in imagePaths:
     #update the data and labels list
     data.append(image)
     labels.append(label)
-print(data, 'next', labels)
+
+#converting data and labels to numoy array
+data = np.array(data, dtype = "float32")
+labels = np.array(labels)
+
+#doing one hot encoding
+lb = LabelBinarizer()
+labels = lb.fit_transform(labels)
+labels = to_categorical(labels)
+
+#creating training and testing data sets
+(trainX, testX, trainY, testY) = train_test_split(data, labels,
+    test_size=0.20, stratify=labels, random_state = 42)
+
+#constructing training image generator
+
+aug = ImageDataGenerator(rotation_range=20, zoom_range=0.15,
+    width_shift_range= 0.2, height_shift_range= 0.2,  shear_range= 0.15,
+    horizontal_flip=True, fill_mode="nearest")
+
+#loading MobilNetV2 network, we will leave the fc layerd head#
+#This is the base model
+baseModel = MobileNetV2(weights="imagenet", include_top=False,
+    input_tensor=Input(shape=(224, 224, 3)))
+
+#constructing the head of the model to be placed on the previous base
+#model
+
+headModel = baseModel.output
+headModel = AveragePooling2D(pool_size=(7, 7))(headModel)
+headModel = Flatten(name = "flatten")(headModel)
+headModel = Dense(128, activation="relu")(headModel)
+headModel = Dropout(0.5)(headModel)
+headModel = Dense(2, activation="softmax")(headModel)
+
+#placing the head over top of the base model
+model = Model(inputs= baseModel.input, outputs = headModel)
+
+#freezing all the layers of base model except head layer
+for layer in baseModel.layers:
+    layer.trainable = False
+
+#compile our model
+print("COMPILING MODEL....")
+opt = Adam(lr = INIT_LR, deacy = INIT_LR/EPOCHS)
+model.compile(loss="binary_crossentropy", optimizer = opt,
+    metrics = ["accuracy"])
+
+#training the network
+#but as the other layers are frozen, we train only the head
+
+H = model.fit(
+    aug,flow(trainX,trainY, batch_size = BS),
+    steps_per_epoch = len(trainX) // BS,
+    validation_data = (testX, testY),
+    validation_steps = len(testX) // BS,
+    epoch = EPOCHS)
+
+#making predcitons on the test set
+print("evaluating network")
+predIdxs = model.predict(testX, batch_size = BS)
