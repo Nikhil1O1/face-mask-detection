@@ -116,3 +116,28 @@ H = model.fit(
 #making predcitons on the test set
 print("evaluating network")
 predIdxs = model.predict(testX, batch_size = BS)
+
+#finding the label with highest probability
+predIdxs = np.argmax(predIdxs, axis = 1)
+
+#printing formatted report
+print(classification_report(testY.argmax(axis = 1), predIdxs,
+    target_names = lb.classes_))
+
+#saving the model to disk
+print("saving the model")
+model.save(args["model"], save_format = "h5")
+
+#plot the model details
+N = EPOCHS
+plt.style.use("ggplot")
+plt.figure()
+plt.plot(np.arange(0, N), H.history["loss"], label = "train_loss")
+plt.plot(np.arange(0, N), H.history["val_loss"], label = "val_loss")
+plt.plot(np.arange(0, N), H.history["accuracy"], label="train_acc")
+plt.plot(np.arange(0, N), H.history["val_accuracy"], label="val_acc")
+plt.title("Training Loss and Accuracy")
+plt.xlabel("Epoch #")
+plt.ylabel("Loss/Accuracy")
+plt.legend(loc="lower left")
+plt.savefig(args["plot"])
