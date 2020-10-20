@@ -38,17 +38,17 @@ EPOCHS = 20
 BS = 32  #batch size
 
 #grab the list of images in our dataset, init the data
-imagePaths = list(path.list_images(args["dataset"]))
+imagePaths = list(paths.list_images(args["dataset"]))
 data = []
 labels = []
 
 #loop over the image paths
-for imgPath in imagePaths:
+for imagePath in imagePaths:
     # extracting image class labels
     label = imagePath.split(os.path.sep)[-2]
 
     #load the input image (224 * 224) and preprocess it
-    image = load_img(imagePath, target_size = (224* 224))
+    image = load_img(imagePath, target_size = (224, 224))
     image = img_to_array(image)
     image = preprocess_input(image)
 
@@ -99,7 +99,7 @@ for layer in baseModel.layers:
 
 #compile our model
 print("COMPILING MODEL....")
-opt = Adam(lr = INIT_LR, deacy = INIT_LR/EPOCHS)
+opt = Adam(lr = INIT_LR, decay = INIT_LR/EPOCHS)
 model.compile(loss="binary_crossentropy", optimizer = opt,
     metrics = ["accuracy"])
 
@@ -107,11 +107,11 @@ model.compile(loss="binary_crossentropy", optimizer = opt,
 #but as the other layers are frozen, we train only the head
 
 H = model.fit(
-    aug,flow(trainX,trainY, batch_size = BS),
+    aug.flow(trainX,trainY, batch_size = BS),
     steps_per_epoch = len(trainX) // BS,
     validation_data = (testX, testY),
     validation_steps = len(testX) // BS,
-    epoch = EPOCHS)
+    epochs = EPOCHS)
 
 #making predcitons on the test set
 print("evaluating network")
