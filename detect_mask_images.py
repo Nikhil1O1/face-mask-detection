@@ -28,9 +28,9 @@ args = vars(ap.parse_args())
 # load our serialized face detector model form the disk
 print("Loading face detector model...")
 prototxtPath = os.path.sep.join([args["face"], "deploy.prototxt"])
-weightPath = os.path.sep.join([args["face"],
-    "res10_300x300_ssd_iter_140000.caffemodel"])
-net = cv2.dnn.readNet(prototxtPath, weightPath)
+weightsPath = os.path.sep.join([args["face"],
+	"res10_300x300_ssd_iter_140000.caffemodel"])
+net = cv2.dnn.readNet(prototxtPath, weightsPath)
 
 #loading the face mask detector from the disk
 print("loading the face mask detector")
@@ -100,4 +100,4 @@ for i in range(0, detections.shape[2]):
 
 #displaying the output
 cv2.imshow("Output", image)
-cv2.waitkey(0)
+cv2.waitKey(0)
